@@ -1,0 +1,123 @@
+-- SISTEMA DE TERROR GLOBAL (Versión URL)
+local Players = game:GetService("Players")
+local Lighting = game:GetService("Lighting")
+local HttpService = game:GetService("HttpService")
+
+-- Configuración
+local TEXTURE_ID = "rbxassetid://14858346952"
+local SOUND_ID = "rbxassetid://4067643809"
+local HORROR_MESSAGES = {
+    "¡TE ESTÁN OBSERVANDO!",
+    "NO ESTÁS SOLO...",
+    "ELLOS VIENEN POR TI",
+    "CORRE MIENTRAS PUEDAS",
+    "DETRÁS DE TI..."
+}
+
+-- Verificación de exploit
+if not (syn and syn.protect_gui) then
+    warn("Se recomienda Synapse X para mejores resultados")
+end
+
+-- 1. Sistema de sonido 3D mejorado
+local function createGlobalSound()
+    local soundPart = Instance.new("Part")
+    soundPart.Name = "GlobalSound_"..HttpService:GenerateGUID(false)
+    soundPart.Anchored = true
+    soundPart.Transparency = 1
+    soundPart.CanCollide = false
+    soundPart.Size = Vector3.new(50, 50, 50)
+    soundPart.Position = workspace.CurrentCamera.Focus.p
+    soundPart.Parent = workspace
+
+    local sound = Instance.new("Sound")
+    sound.SoundId = SOUND_ID
+    sound.Volume = 2
+    sound.Looped = true
+    sound.MaxDistance = 99999
+    sound.EmitterSize = 1000
+    sound.Parent = soundPart
+
+    -- Técnica de persistencia
+    spawn(function()
+        while true do
+            sound:Play()
+            wait(10)
+        end
+    end)
+end
+
+-- 2. Efectos visuales globales
+local function applyHorrorVisuals()
+    -- Modificar iluminación
+    Lighting.Ambient = Color3.fromRGB(150, 0, 0)
+    Lighting.Brightness = 0.3
+    Lighting.FogEnd = 50
+    Lighting.FogColor = Color3.fromRGB(100, 0, 0)
+    
+    -- Modificar cielo
+    local sky = Lighting:FindFirstChildOfClass("Sky") or Instance.new("Sky")
+    for _, property in ipairs({"SkyboxBk", "SkyboxDn", "SkyboxFt", "SkyboxLf", "SkyboxRt", "SkyboxUp"}) do
+        sky[property] = TEXTURE_ID
+    end
+    sky.Parent = Lighting
+    
+    -- Aplicar a personajes
+    for _, player in ipairs(Players:GetPlayers()) do
+        spawn(function()
+            local char = player.Character or player.CharacterAdded:Wait()
+            local head = char:WaitForChild("Head", 5)
+            if head then
+                local decal = head:FindFirstChildOfClass("Decal") or Instance.new("Decal")
+                decal.Texture = TEXTURE_ID
+                decal.Face = Enum.NormalId.Front
+                decal.Parent = head
+            end
+        end)
+    end
+end
+
+-- 3. Notificaciones de terror
+local function showHorrorNotifications()
+    for _, player in ipairs(Players:GetPlayers()) do
+        spawn(function()
+            local gui = Instance.new("ScreenGui")
+            gui.Name = "HorrorAlert_"..HttpService:GenerateGUID(false)
+            gui.ResetOnSpawn = false
+            gui.IgnoreGuiInset = true
+            
+            if syn then syn.protect_gui(gui) end
+            
+            local frame = Instance.new("Frame")
+            frame.Size = UDim2.new(1, 0, 1, 0)
+            frame.BackgroundColor3 = Color3.fromRGB(20, 0, 0)
+            frame.BackgroundTransparency = 0.7
+            frame.Parent = gui
+            
+            local label = Instance.new("TextLabel")
+            label.Size = UDim2.new(1, 0, 0.15, 0)
+            label.Position = UDim2.new(0, 0, 0.4, 0)
+            label.Text = HORROR_MESSAGES[math.random(1, #HORROR_MESSAGES)]
+            label.TextColor3 = Color3.fromRGB(255, 50, 50)
+            label.Font = Enum.Font.GothamBlack
+            label.TextScaled = true
+            label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+            label.TextStrokeTransparency = 0
+            label.Parent = frame
+            
+            gui.Parent = player:WaitForChild("PlayerGui", 10)
+        end)
+    end
+end
+
+-- Ejecución principal
+createGlobalSound()
+applyHorrorVisuals()
+showHorrorNotifications()
+
+-- Mensaje en el chat
+pcall(function()
+    game:GetService("TextChatService").TextChannels.RBXGeneral:SendAsync("👁️ ¡EL TERROR SE HA DESPERTADO! 👁️")
+end)
+
+return "✅ Sistema de terror global activado"
